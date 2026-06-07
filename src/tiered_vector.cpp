@@ -1,20 +1,16 @@
 #pragma once
 
-	#include <cmath>     // std::sqrt
-	#include <cstddef>   // std::size_t
-	#include <cstdint>
-	#include <stdexcept> // std::out_of_range
-	#include <vector>
+#include <cmath>     // std::sqrt
+#include <cstddef>   // std::size_t
+#include <cstdint>
+#include <stdexcept> // std::out_of_range
+#include <vector>
 
 template <typename T>
 class TieredVector {
 private:
 	// ------------------------------------------------------------------
 	//  A single block: a fixed-capacity circular buffer.
-	//
-	//  `data` is a flat array of length `cap`.  The logical element j
-	//  (0 <= j < count) lives at physical slot (head + j) % cap.  Because the
-	//  buffer is circular, both ends can grow/shrink cheaply.
 	// ------------------------------------------------------------------
 	struct Block 
 	{
@@ -30,7 +26,7 @@ private:
 		bool full()  const { return count == cap; }
 		bool empty() const { return count == 0; }
 
-		// Map a logical index (0..count-1) to a physical slot in `data`.
+		// Map a logical index (0..count-1) to a physical slot in "data".
 		std::size_t phys(std::size_t logical) const 
 		{
 			std::size_t p = head + logical;
@@ -101,9 +97,7 @@ private:
 
 	// ------------------------------------------------------------------
 	//  Full rebuild: flatten everything and re-pack into fresh blocks whose
-	//  capacity is 2*target (so each starts half full and has room to grow
-	//  before it must split).  O(N).  Called only when count_ crosses a
-	//  power-of-two boundary, so it is geometrically rare => amortized O(1).
+	//  capacity is 2*target.
 	// ------------------------------------------------------------------
 	void rebuild() 
 	{
@@ -146,8 +140,8 @@ private:
 		nextRebuild_ = (count_ < 2 ? 2 : count_ * 2);
 	}
 
-	// Locate the block containing global index `index`, returning the block
-	// number and writing the in-block local index into `local`.  O(#blocks).
+	// Locate the block containing global index "index", returning the block
+	// number and writing the in-block local index into "local".
 	std::size_t locate(std::size_t index, std::size_t& local) const 
 	{
 		std::size_t b = 0;
@@ -179,7 +173,7 @@ public:
 	}
 
 	// ------------------------------------------------------------------
-	//  Insert `value` at global position `index` (0..size()).
+	//  Insert `value` at global position "index" (0..size()).
 	// ------------------------------------------------------------------
 	void insert(std::size_t index, const T& value) 
 	{
@@ -206,15 +200,15 @@ public:
 		blocks_[b].insert(local, value);
 		++count_;
 
-		// Periodic global rebuild keeps block size ~ sqrt(N) as N grows.
-		if (count_ >= nextRebuild_) rebuild();
+		if (count_ >= nextRebuild_) 
+			rebuild();
 	}
 
 	void push_back(const T& value)  { insert(count_, value); }
 	void push_front(const T& value) { insert(0, value); }
 
 	// ------------------------------------------------------------------
-	//  Erase the element at global position `index`.
+	//  Erase the element at global position "index".
 	// ------------------------------------------------------------------
 	void erase(std::size_t index) 
 	{
@@ -255,11 +249,6 @@ private:
 public:
 	// ------------------------------------------------------------------
 	//  Memory accounting.
-	//
-	//  The Tiered Vector trades memory for speed: each block's circular buffer
-	//  is allocated to `cap` but only `count` slots are in use, so there is
-	//  always some unused capacity.  These helpers let the benchmark report
-	//  both the live payload and the total reserved capacity.
 	// ------------------------------------------------------------------
 	std::size_t numBlocks() const { return blocks_.size(); }
 

@@ -221,10 +221,10 @@ class AVLTree
 			++count_;
 		}
 
-		// Convenience: append to the back (the "Append Workload").
+		// append to the back (the "Append Workload").
 		void push_back(const T& value) { insert(count_, value); }
 
-		// Convenience: insert at the very front (the "Front Mutation Workload").
+		// insert at the very front (the "Front Mutation Workload").
 		void push_front(const T& value) { insert(0, value); }
 
 		// Remove and discard the element at `index`. Throws if out of range.
