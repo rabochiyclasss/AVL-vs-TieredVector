@@ -173,7 +173,7 @@ class AVLTree
 					delete node;
 					return child;
 				}
-				
+
 				// Two children: copy the value of the in-order successor (the
             	// smallest element in the right subtree) into this node, then
             	// delete that successor (which has at most one child) from the
@@ -184,4 +184,14 @@ class AVLTree
 			}
 			return rebalance(node);
 		}
+
+		static void destroy(Node* n)
+		{
+			if(!n) return;
+			destroy(n->left);
+			destroy(n->right);
+			delete n;
+		}
+	
+	
 };
