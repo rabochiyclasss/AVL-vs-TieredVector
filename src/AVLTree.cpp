@@ -1,5 +1,6 @@
 #include <cstddef>
 #include <algorithm>
+#include <stdexcept>
 #pragma once
 
 template <typename T>
@@ -77,7 +78,7 @@ class AVLTree
 
 			update(y);
 			update(x);
-			return y;
+			return x;
 		}
 
 		//  Left rotation (mirror image, used to fix a right-heavy node `x`)
@@ -194,13 +195,13 @@ class AVLTree
 		}
 	
 	public:
-		IndexableAVL() = default;
-		~IndexableAVL() { destroy(root_); }
+		AVLTree() = default;
+		~AVLTree() { destroy(root_); }
 
 		// Non-copyable for simplicity (deep copy is easy to add but unnecessary
 		// for the benchmark and would just invite accidental O(N) copies).
-		IndexableAVL(const IndexableAVL&)            = delete;
-		IndexableAVL& operator=(const IndexableAVL&) = delete;
+		AVLTree(const AVLTree&)            = delete;
+		AVLTree& operator=(const AVLTree&) = delete;
 
 		// ------------------------------------------------------------------
 		//  Public API mirrors a dynamic array / list.
