@@ -94,6 +94,8 @@ class AVLTree
 			return y;
 		}
 
+		// Re-balance a single node after an insert/delete may have changed its
+    	//  subtree heights.  Returns the (possibly new) subtree root.
 		static Node* rebalance(Node* n)
 		{
 			update(n); //make sure metadata is fresh
@@ -117,5 +119,69 @@ class AVLTree
 			}
 			// Already balanced.
 			return n;
+		}
+
+		//  Recursive insert of `value` so that it lands at position `index`
+    	//  (0-based) in the in-order sequence.  After the call, get(index) will
+    	//  return `value` and everything that used to be at >= index shifts right
+		Node* insertAt(Node* node, std::size_t index, const T& value)
+		{
+			// reached an empty slot -> create leaf
+			if(!node)
+				return new Node(value);
+			
+			std::size_t leftSize = sz(node->left);
+			if(index <= leftSize)
+				node->left = insertAt(node->left, index, value);
+			else
+				node->right = insertAt(node->right, index - leftSize - 1, value);
+			
+				return rebalance(node);
+		}
+
+		// Find the node that holds the minimum index of a subtree (its leftmost
+    	// node).  Used by erase when a node has two children.
+		static Node* leftmost(Node* node) 
+		{
+			while (node->left)
+				node = node->left;
+			return node;
+		}
+
+		// ------------------------------------------------------------------
+    	//  Recursive delete of the element currently at position `index`.
+    	// ------------------------------------------------------------------
+		Node* eraseAt(Node* node, std::size_t index)
+		{
+			std::size_t leftSize = sz(node->left);
+
+			if (index < leftSize)
+			{
+				node->left = eraseAt(node->left, index);
+			}
+			else if (index > leftSize)
+			{
+				node->right = eraseAt(node->right, index - leftSize - 1);
+			}
+			else
+			{
+				// ---- This is the node to remove (index == leftSize) ----------
+				if (!node->left || !node->right)
+				{
+					// Zero or one child
+					Node* child = node->left ? node->left : node->right;
+					delete node;
+					return child;
+				}
+				
+				// Two children: copy the value of the in-order successor (the
+            	// smallest element in the right subtree) into this node, then
+            	// delete that successor (which has at most one child) from the
+            	// right subtree.  Successor is at local index 0 of the right side.
+				Node* successor = leftmost(node->right);
+				node->value = successor->value;
+				node->right = eraseAt(node->right, 0);
+			}
+			return rebalance(node);
 		}
 };
