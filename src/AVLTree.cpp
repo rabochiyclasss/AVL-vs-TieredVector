@@ -193,5 +193,74 @@ class AVLTree
 			delete n;
 		}
 	
-	
+	public:
+		IndexableAVL() = default;
+		~IndexableAVL() { destroy(root_); }
+
+		// Non-copyable for simplicity (deep copy is easy to add but unnecessary
+		// for the benchmark and would just invite accidental O(N) copies).
+		IndexableAVL(const IndexableAVL&)            = delete;
+		IndexableAVL& operator=(const IndexableAVL&) = delete;
+
+		// ------------------------------------------------------------------
+		//  Public API mirrors a dynamic array / list.
+		// ------------------------------------------------------------------
+
+		std::size_t size()  const { 
+			return count_; 
+		}
+		bool        empty() const { 
+			return count_ == 0; 
+		}
+
+		// Insert `value` so it ends up at position `index`. index may equal size()
+		// (append at the end).  Throws if index > size().
+		void insert(std::size_t index, const T& value) {
+			if (index > count_) throw std::out_of_range("insert index out of range");
+			root_ = insertAt(root_, index, value);
+			++count_;
+		}
+
+		// Convenience: append to the back (the "Append Workload").
+		void push_back(const T& value) { insert(count_, value); }
+
+		// Convenience: insert at the very front (the "Front Mutation Workload").
+		void push_front(const T& value) { insert(0, value); }
+
+		// Remove and discard the element at `index`. Throws if out of range.
+		void erase(std::size_t index) {
+			if (index >= count_) throw std::out_of_range("erase index out of range");
+			root_ = eraseAt(root_, index);
+			--count_;
+		}
+
+		// ------------------------------------------------------------------
+		//  Random access: return the element at position `index` in O(log N).
+		//  We walk down the tree, at each step deciding left/right by comparing
+		//  the index with the size of the left subtree.
+		// ------------------------------------------------------------------
+		const T& get(std::size_t index) const {
+			if (index >= count_) throw std::out_of_range("get index out of range");
+			Node* node = root_;
+			while (true) {
+				std::size_t leftSize = sz(node->left);
+				if (index < leftSize) {
+					node = node->left;
+				} else if (index > leftSize) {
+					index -= leftSize + 1;   // skip the left subtree + this node
+					node = node->right;
+				} else {
+					return node->value;      // index == leftSize: found it
+				}
+			}
+		}
+
+		// Height of the whole tree.
+		int height() const { return h(root_); }
+
+		// Bytes of heap memory consumed by the tree nodes themselves.  This counts
+		// the logical node footprint; the real process also pays per-allocation
+		// malloc overhead, which we estimate separately in the benchmark.
+		std::size_t memoryBytes() const { return count_ * sizeof(Node); }
+		static constexpr std::size_t nodeSize() { return sizeof(Node); }
 };
